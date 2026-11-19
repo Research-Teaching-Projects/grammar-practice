@@ -71,6 +71,25 @@ button.again{display:none}.q.fin button.again{display:inline-block}
 .frow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 select{font:inherit;padding:6px 8px;border:1px solid #111;border-radius:6px;background:#fff}
 footer{margin-top:28px;font-size:13px;color:#666}
+
+.wbox{border:1px solid #111;border-radius:8px;padding:12px 14px;margin-bottom:12px}
+.wtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.wprompt{font-size:18px;font-weight:600}
+.whint{color:#555;font-size:14px;margin-top:6px}
+#w-text{width:100%;font:inherit;font-size:17px;line-height:1.6;padding:12px;border:1px solid #111;border-radius:8px;resize:vertical}
+.wbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.wright{display:flex;gap:8px;flex-wrap:wrap}
+.scores{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+.sc{border:2px solid #111;border-radius:8px;padding:10px 16px;min-width:140px;text-align:center}
+.sc .v{font-size:28px;font-weight:800}.sc .l{font-size:13px;color:#555}
+.marked{border:1px solid #ccc;border-radius:8px;padding:12px 14px;font-size:17px;line-height:1.9;white-space:pre-wrap}
+mark.e{background:#fde8e8;border-bottom:2px solid #c00000;color:inherit;cursor:pointer;padding:0 1px;border-radius:2px}
+mark.e.s{background:#fff4d6;border-bottom-color:#b07a00}
+mark.e.on{outline:2px solid #111}
+.detail{margin-top:10px;border-left:4px solid #111;padding:8px 12px;background:#fafafa;min-height:24px}
+.issue{border:1px solid #ddd;border-radius:8px;padding:8px 12px;margin-bottom:8px;cursor:pointer}
+.issue .t{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#666}
+.note{color:#666;font-size:13px;margin-top:22px}
 </style></head>
 <body><div class="wrap">
 
@@ -86,6 +105,8 @@ footer{margin-top:28px;font-size:13px;color:#666}
 <li><a class="big" href="#quiz">Mixed quiz <span class="cnt">(15 random questions from all topics, new question types)</span></a></li>
 <li><a class="big" href="#cards">Flashcards <span class="cnt">(say the corrected form, then flip)</span></a></li>
 </ul>
+<h2>Step 4. Write paragraphs</h2>
+<ul class="menu"><li><a class="big" href="#write">Writing practice <span class="cnt">(new topics, checked automatically)</span></a></li></ul>
 </div>
 
 <div id="v-rules" style="display:none">
@@ -114,6 +135,33 @@ footer{margin-top:28px;font-size:13px;color:#666}
 <h1>Mixed quiz</h1>
 <p class="sub">15 random questions from all 13 topics, in new formats: find the mistake, correct or incorrect, fix the sentence, fill several blanks, and edit a paragraph. Tap <b>See the rule</b> under any question to read the rule before you answer. Tap <b>New round</b> for a different set.</p>
 <div id="q-barslot"></div>
+</div>
+
+
+<div id="v-write" style="display:none">
+<nav class="top"><a href="#">&larr; Home</a><a href="#rules">Read the rules</a><a href="#quiz">Mixed quiz &rarr;</a></nav>
+<h1>Writing practice</h1>
+<p class="sub">Write one paragraph on a new topic, then tap <b>Check my writing</b>. Mistakes are highlighted in the text; tap a highlight to see what to change. Fix them, then check again to raise your score.</p>
+<div class="wbox">
+ <div class="wtop"><b>Topic</b><button id="w-new">New topic</button></div>
+ <div id="w-prompt" class="wprompt"></div>
+ <div class="whint">Aim for one paragraph of 80 to 150 words: give your opinion, one or two reasons, and an example.</div>
+</div>
+<textarea id="w-text" rows="11" placeholder="Start writing here..." spellcheck="false" autocorrect="off" autocapitalize="sentences"></textarea>
+<div class="wbar"><span id="w-count">0 words</span>
+ <span class="wright"><select id="w-lang" aria-label="English variety"><option value="en-GB">British English</option><option value="en-US">American English</option></select>
+ <button id="w-clear">Clear</button><button class="primary" id="w-check">Check my writing</button></span></div>
+<div id="w-status" class="fb"></div>
+<div id="w-result" style="display:none">
+ <div class="scores" id="w-scores"></div>
+ <h2>Your paragraph</h2>
+ <div class="marked" id="w-marked"></div>
+ <div class="detail" id="w-detail">Tap a highlighted part to see the correction.</div>
+ <h2>Things to fix</h2>
+ <div id="w-list"></div>
+</div>
+<p class="note">Before you check, read your paragraph once and look for verb agreement, a/an, then/than, and commas joining two sentences.<br>
+Checking uses <a href="https://languagetool.org" target="_blank" rel="noopener">LanguageTool</a> plus extra checks for the patterns on this site. Your paragraph is sent to LanguageTool to be checked. Automatic checkers miss some mistakes and occasionally flag correct writing, so treat the score as a guide.</p>
 </div>
 
 <div id="v-cards" style="display:none">
@@ -232,7 +280,7 @@ function update(){
 }
 
 /* ---------- views ---------- */
-const V=['home','topic','rules','quiz','cards'];
+const V=['home','topic','rules','quiz','cards','write'];
 function view(v){V.forEach(x=>$('v-'+x).style.display=(x===v)?'':'none');window.scrollTo(0,0)}
 let curQs=null,round=null;
 function openTopic(n){
@@ -252,6 +300,7 @@ function route(){
   if(h==='rules'||h.startsWith('rules-')){view('rules');const k=h.split('-')[1];if(k){const s=$('r-'+k);if(s)setTimeout(()=>s.scrollIntoView(),0)}return}
   if(h==='quiz'){view('quiz');$('b-mix').textContent='New round';$('dr-body').innerHTML=ALLRULES;moveBar('q-barslot');newRound();return}
   if(h==='cards'){view('cards');startCards();return}
+  if(h==='write'){view('write');return}
   view('home');
 }
 $('b-mix').onclick=()=>{if(location.hash==='#quiz'){newRound()}else{render(shuffle(curQs))}window.scrollTo(0,0)};
@@ -294,6 +343,105 @@ document.addEventListener('keydown',e=>{if(location.hash!=='#cards')return;if(e.
 $('c-know').onclick=()=>{known++;pos++;showCard()};
 $('c-again').onclick=()=>{deck.push(deck[pos]);pos++;showCard()};
 $('c-topic').onchange=startCards;$('c-restart').onclick=startCards;
+
+
+/* ---------- writing practice ---------- */
+const PROMPTS=["Some people think students should wear school uniforms. Do you agree or disagree?", "Is it better to live in a big city or a small town?", "Should governments spend more money on public transport than on new roads?", "Is online learning as effective as learning in a classroom?", "Should children have their own smartphones before the age of 12?", "Tourism brings both benefits and problems to a city. Discuss.", "Is working from home better than working in an office?", "Should university education be free for everyone?", "Should fast food be taxed more heavily to protect public health?", "Is social media good or bad for young people?", "Should every student be required to learn a second language?", "Does advertising do more harm than good?", "Should old buildings be protected, or replaced with modern ones?", "Should plastic bags be banned completely?", "Is space exploration a good use of public money?", "Should sports be compulsory in schools?", "Are electric cars the answer to air pollution?", "Is it better to save money or to spend it on experiences such as travel?", "Are famous athletes paid too much?", "Do zoos help animals or harm them?", "Should homework be banned in primary schools?", "Is it better to work for a large company or a small one?", "Should people be allowed to use mobile phones while driving if they use hands-free devices?", "Is reading books still important in the age of the internet?"];
+const MISSPELL={becuase:'because',beacuse:'because',becasue:'because',thir:'their',thier:'their',artifical:'artificial',promblem:'problem',enviroment:'environment',enviornment:'environment',poducts:'products',howerver:'however',somtime:'sometimes',perforrm:'perform',ment:'meant',infrastructre:'infrastructure',consumend:'consumed',existance:'existence',dificult:'difficult',requre:'require',financialy:'financially',citites:'cities',mantain:'maintain',chategories:'categories',desimate:'disseminate',enetertainment:'entertainment',hardwork:'hard work',somedays:'some days',lifes:'lives',bain:'bane',freind:'friend',recieve:'receive',beleive:'believe',untill:'until',occured:'occurred',goverment:'government',seperate:'separate',definately:'definitely',wich:'which',alot:'a lot',everytime:'every time',inspite:'in spite',anyway:null};
+const AN_EXC=/^(uni|use|usu|usa|us$|uk$|eu|one|once|ure|uro|ufo)/i, A_EXC=/^(hour|honest|honou?r|heir|mba|mp\b|fbi|sms|x-ray)/i;
+const PLURAL_SUBJ='(?:all|many|most|some|both|few|several) of (?:us|them|you|(?:the|my|our|their|these|those) \\w+s)';
+const AUXBEFORE=/\b(does|did|do|can|could|will|would|should|may|might|must|to|let|lets|make|makes|help|helps)\s+$/i;
+function localChecks(t){
+  const out=[];const before=m=>t.slice(Math.max(0,m.index-14),m.index);
+  const add=(re,msg,fixFn,type)=>{let m;re.lastIndex=0;while((m=re.exec(t))){const f=fixFn(m);if(f===false)continue;
+    out.push({o:m.index,l:m[0].length,msg,rep:f==null?[]:[f],type:type||'Grammar',src:'site'})}};
+  // known misspellings
+  let m;const wre=/\b[A-Za-z]+\b/g;
+  while((m=wre.exec(t))){const w=m[0].toLowerCase();if(w in MISSPELL&&MISSPELL[w]){let r=MISSPELL[w];if(m[0][0]===m[0][0].toUpperCase())r=r[0].toUpperCase()+r.slice(1);
+    out.push({o:m.index,l:m[0].length,msg:'Spelling.',rep:[r],type:'Spelling',src:'site'})}}
+  // a / an
+  add(/\b([Aa]) ([aeiouAEIOU][a-z]*)/g,'Use "an" before a vowel sound.',m=>AN_EXC.test(m[2])?false:(m[1]==='A'?'An':'an')+' '+m[2]);
+  add(/\b([Aa]n) ([b-df-hj-np-tv-zB-DF-HJ-NP-TV-Z][a-z]*)/g,'Use "a" before a consonant sound.',m=>A_EXC.test(m[2])?false:(m[1]==='An'?'A':'a')+' '+m[2]);
+  add(/\b([Aa]) (hour|honest|honour|honor)\b/g,'Use "an": the h is silent.',m=>(m[1]==='A'?'An':'an')+' '+m[2]);
+  // then / than after comparisons
+  add(/\b(more|less|rather|better|worse|bigger|smaller|higher|lower|greater|fewer|other|[a-z]{2,}er) then\b/g,'Comparisons use "than".',m=>/^(eith|neith|oth|togeth|wheth|aft|und|ov|ev|nev|wh)er$/.test(m[1])&&m[1]!=='other'?false:m[1]+' than');
+  // capital after comma
+  add(/, (We|It|The|This|They|There|Our|He|She|I'm|However|Technology|In)\b/g,'No capital letter after a comma.',m=>(m[1]==='I\'m')?false:', '+m[1][0].toLowerCase()+m[1].slice(1));
+  // spacing
+  add(/ +([,.;:!?])/g,'No space before punctuation.',m=>m[1]);
+  add(/([a-z])([.,;:])([A-Za-z])/g,'Leave a space after punctuation.',m=>/^(e\.g|i\.e)$/.test(m[1]+m[2]+m[3])?false:m[1]+m[2]+' '+m[3]);
+  // agreement
+  add(new RegExp('\\b('+PLURAL_SUBJ+') (has|is|was|does|wants|needs|thinks|believes)\\b','gi'),'Plural subject: use the plural verb.',m=>m[1]+' '+({has:'have',is:'are',was:'were',does:'do'}[m[2].toLowerCase()]||m[2].replace(/s$/,'')));
+  add(/\b(He|he|She|she|It|it) (do|don't|have) (not )?/g,'He, she or it takes does / doesn\'t / has.',m=>AUXBEFORE.test(before(m))?false:m[1]+' '+({do:'does',"don't":"doesn't",have:'has'}[m[2]])+' '+(m[3]||''));
+  add(/\b(does|did|doesn't|didn't|does not|did not|can|will|should|must) ([a-z]+[^s]s)\b/g,'After does, did, can or will, use the base verb (no -s).',m=>/^(is|has|was|its|always|sometimes|perhaps|this|thus|us|yes|less|unless|plus|news|series|species|means|towards|afterwards|nevertheless|regardless|ourselves|themselves|yourselves|others)$/.test(m[2])||/(ss|us|is)$/.test(m[2])?false:m[1]+' '+m[2].replace(/s$/,''));
+  add(/\b(everybody|everyone|somebody|someone|nobody|each student|every student) (have|are|were|do|want|need)\b/gi,'Everyone, everybody and each take a singular verb.',m=>AUXBEFORE.test(before(m))?false:m[1]+' '+({have:'has',are:'is',were:'was',do:'does'}[m[2].toLowerCase()]||m[2]+'s'));
+  add(/\b(one of the) ((?:[a-z]+ ){0,2})([a-z]*[^s\W])(?= (?:is|was|that|which|who|in|for|to|on|at|I|we)\b|[.,])/gi,'"One of the" is followed by a plural noun.',m=>/^(children|people|men|women|data|media|staff|police|best|most|main|few|biggest|largest|greatest|key|major|top|first|last|only)$/i.test(m[3])?false:m[1]+' '+m[2]+m[3]+'s');
+  add(/\b([a-z]{3,}[^su\W']s) (does|doesn't|has|is|was|wants|needs|makes)\b/g,'Plural subject: use the plural verb.',m=>/^(this|always|perhaps|sometimes|news|series|species|means|ones|lens|thanks|yes|whereas|towards|afterwards|nowadays|others|its|hers|ours|yours|theirs)$/.test(m[1])||/(ics|is)$/.test(m[1])||AUXBEFORE.test(before(m))?false:m[1]+' '+({does:'do',"doesn't":"don't",has:'have',is:'are',was:'were'}[m[2]]||m[2].replace(/s$/,'')));
+  // fixed phrases
+  add(/\b[Aa]ccording to me\b/g,'Say "In my opinion".',m=>m[0][0]==='A'?'In my opinion':'in my opinion');
+  add(/\bdiscuss(es|ed|ing)? about\b/gi,'"Discuss" takes no preposition.',m=>'discuss'+(m[1]||''));
+  add(/\bI am agree\b/gi,'Say "I agree".',m=>'I agree');
+  add(/\b[Ii]n my point of view\b/g,'Say "From my point of view".',m=>'From my point of view');
+  add(/\bin (19|20)(\d0)s\b/g,'Decades take "the".',m=>'in the '+m[1]+m[2]+'s');
+  add(/\b(In|in) (this|my) (essay|paragraph|opinion) (we|I|it|there|people|the)\b/g,'Put a comma after the opening phrase.',m=>m[1]+' '+m[2]+' '+m[3]+', '+m[4],'Punctuation');
+  add(/\b(However|Therefore|Moreover|Furthermore|For example|For instance|In conclusion|On the other hand|Additionally|In my opinion|In my view|Today|Nowadays|In today's world|Secondly|Finally|As a result|Because of this) (?=[a-z])/g,'Put a comma after this opening word or phrase.',m=>m[1]+', ','Punctuation');
+  // possible run-on
+  add(/, (this|it|they|he|she|we|there) (is|are|was|were|will|can|has|have|helps|makes|means|gives)\b/g,'Possible run-on: if both sides are full sentences, use a full stop or add a joining word (and, but, so).',m=>'. '+m[1][0].toUpperCase()+m[1].slice(1)+' '+m[2],'Suggestion');
+  return out;
+}
+function ltType(mt){const it=(mt.rule&&mt.rule.issueType)||'',cat=(mt.rule&&mt.rule.category&&mt.rule.category.id)||'';
+  if(it==='misspelling'||cat==='TYPOS')return 'Spelling';
+  if(cat==='PUNCTUATION'||cat==='TYPOGRAPHY'||cat==='CASING')return 'Punctuation';
+  if(it==='style'||cat==='STYLE'||cat==='REDUNDANCY'||cat==='PLAIN_ENGLISH'||it==='locale-violation')return 'Suggestion';
+  return 'Grammar';}
+async function ltCheck(text,lang){
+  const r=await fetch('https://api.languagetool.org/v2/check',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({text,language:lang})});
+  if(r.status===429)throw new Error('rate');if(!r.ok)throw new Error('http');
+  const j=await r.json();
+  return j.matches.map(mt=>({o:mt.offset,l:mt.length,msg:mt.message,rep:(mt.replacements||[]).slice(0,3).map(x=>x.value),type:ltType(mt),src:'lt'}));
+}
+function merge(a,b){const all=a.slice();b.forEach(x=>{if(!all.some(y=>x.o<y.o+y.l&&y.o<x.o+x.l))all.push(x)});return all.sort((x,y)=>x.o-y.o)}
+function words(t){return (t.match(/\b[\w'-]+\b/g)||[]).length}
+let issues=[],checkedText='';
+function showDetail(i){
+  document.querySelectorAll('mark.e').forEach(x=>x.classList.toggle('on',+x.dataset.i===i));
+  const x=issues[i];const bad=checkedText.substr(x.o,x.l);
+  $('w-detail').innerHTML='<b>'+x.type+':</b> '+esc(x.msg)+'<br><span class="w">'+esc(bad)+'</span>'+(x.rep.length?' &rarr; <span class="c">'+x.rep.map(esc).join('</span> or <span class="c">')+'</span>':'');
+}
+function score10(n,w){if(!w)return 0;return Math.max(0,Math.round(10-1.5*n*100/Math.max(w,50)))}
+async function doCheck(){
+  const t=$('w-text').value;const w=words(t);
+  if(w<10){$('w-status').innerHTML='<span class="n">Write at least a few sentences first.</span>';return}
+  $('w-check').disabled=true;$('w-status').textContent='Checking...';
+  let lt=[],note='';
+  try{lt=await ltCheck(t,$('w-lang').value)}
+  catch(e){note=e.message==='rate'?'The online checker is busy (too many checks in one minute). Showing the site\'s own checks only; try again in a minute.':'The online checker could not be reached. Showing the site\'s own checks only.'}
+  $('w-check').disabled=false;
+  checkedText=t;issues=merge(lt,localChecks(t));
+  const cnt=k=>issues.filter(x=>x.type===k).length;
+  const g=cnt('Grammar'),p=cnt('Punctuation'),s=cnt('Spelling'),sg=cnt('Suggestion');
+  $('w-status').innerHTML=note?'<span class="n">'+note+'</span>':(issues.length?'':'<span class="y">No mistakes found. Excellent work!</span>');
+  $('w-scores').innerHTML=
+    '<div class="sc"><div class="v">'+score10(g+p,w)+'/10</div><div class="l">Grammar and punctuation<br>'+(g+p)+' to fix</div></div>'+
+    '<div class="sc"><div class="v">'+score10(s,w)+'/10</div><div class="l">Spelling<br>'+s+' to fix</div></div>'+
+    '<div class="sc"><div class="v">'+w+'</div><div class="l">Words<br>'+(w<80?'aim for 80 or more':w>150?'a little long for one paragraph':'good length')+'</div></div>';
+  let h='',pos=0;issues.forEach((x,i)=>{h+=esc(t.slice(pos,x.o))+'<mark class="e'+(x.type==='Suggestion'?' s':'')+'" data-i="'+i+'">'+esc(t.substr(x.o,x.l)||' ')+'</mark>';pos=x.o+x.l});h+=esc(t.slice(pos));
+  $('w-marked').innerHTML=h;$('w-detail').textContent=issues.length?'Tap a highlighted part to see the correction.':'Nothing to fix.';
+  document.querySelectorAll('mark.e').forEach(mk=>mk.onclick=()=>showDetail(+mk.dataset.i));
+  $('w-list').innerHTML=issues.length?issues.map((x,i)=>'<div class="issue" data-i="'+i+'"><div class="t">'+x.type+(x.type==='Suggestion'?' (not counted in the score)':'')+'</div><span class="w">'+esc(t.substr(x.o,x.l))+'</span>'+(x.rep.length?' &rarr; <span class="c">'+esc(x.rep[0])+'</span>':'')+'<div>'+esc(x.msg)+'</div></div>').join(''):'<p>Nothing to fix. Try a new topic.</p>';
+  document.querySelectorAll('.issue').forEach(d=>d.onclick=()=>{showDetail(+d.dataset.i);$('w-marked').scrollIntoView({behavior:'smooth',block:'center'})});
+  $('w-result').style.display='';$('w-result').scrollIntoView({behavior:'smooth'});
+}
+function newPrompt(){let p;do{p=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]}while(PROMPTS.length>1&&p===$('w-prompt').textContent);$('w-prompt').textContent=p;
+  try{localStorage.setItem('gp-prompt',p)}catch(e){}}
+$('w-new').onclick=()=>{newPrompt();$('w-result').style.display='none';$('w-status').textContent=$('w-text').value.trim()?'New topic chosen. Tap Clear to start a fresh paragraph.':''};
+$('w-clear').onclick=()=>{$('w-text').value='';$('w-result').style.display='none';$('w-status').textContent='';updCount();saveDraft()};
+$('w-check').onclick=doCheck;
+function updCount(){const w=words($('w-text').value);$('w-count').textContent=w+' word'+(w===1?'':'s')}
+function saveDraft(){try{localStorage.setItem('gp-draft',$('w-text').value)}catch(e){}}
+$('w-text').addEventListener('input',()=>{updCount();saveDraft()});
+(function(){let p=null,d='';try{p=localStorage.getItem('gp-prompt');d=localStorage.getItem('gp-draft')||''}catch(e){}
+  if(p&&PROMPTS.includes(p))$('w-prompt').textContent=p;else newPrompt();$('w-text').value=d;updCount()})();
 
 window.addEventListener('hashchange',route);route();
 </script></body></html>
